@@ -9,7 +9,7 @@ import { Clipboard, AlertCircle, Loader2, Link as LinkIcon, ArrowLeft, X, Sparkl
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDownloads } from '../contexts/DownloadContext';
 
-const API_Base = import.meta.env.VITE_API_URL || "";
+const API_Base = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
 
 export function DownloaderLayout({ title, description, icon: Icon, placeholder, theme = 'default' }) {
     const [searchParams] = useSearchParams();
