@@ -3,7 +3,7 @@ import { io } from 'socket.io-client';
 
 const DownloadContext = createContext();
 
-const API_Base = "";
+const API_Base = import.meta.env.VITE_API_URL || "";
 
 export function DownloadProvider({ children }) {
     const [socket, setSocket] = useState(null);
