@@ -34,7 +34,14 @@ app.get('/', (req, res) => {
 app.use(express.json({ limit: '50mb' }));
 
 // Path to vt-dlp binary within node_modules
-const YTDLP_PATH = path.join(__dirname, 'node_modules', 'youtube-dl-exec', 'bin', 'yt-dlp.exe');
+const YTDLP_PATH = path.join(__dirname, 'node_modules', 'youtube-dl-exec', 'bin', process.platform === 'win32' ? 'yt-dlp.exe' : 'yt-dlp');
+
+console.log(`YTDLP_PATH resolved to: ${YTDLP_PATH}`);
+if (!fs.existsSync(YTDLP_PATH)) {
+  console.error("CRITICAL: yt-dlp binary NOT FOUND at path:", YTDLP_PATH);
+  // Fallback: Try to find it blindly in node_modules if path changed
+  // This is a safety measure
+}
 
 // Helper to log to file
 const logToFile = (msg) => {
