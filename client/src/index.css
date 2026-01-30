@@ -1,0 +1,133 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Premium Dark Palette */
+    --bg-background: 248 250 252;
+    --text-primary: 15 23 42;
+    --text-secondary: 71 85 105;
+    --border-subtle: 226 232 240;
+
+    /* New Gradients - Rich & Deep */
+    --gradient-primary: linear-gradient(135deg, #0ea5e9 0%, #6366f1 50%, #8b5cf6 100%);
+    --gradient-dark: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+    --gradient-glow: radial-gradient(circle at center, rgba(56, 189, 248, 0.15) 0%, transparent 70%);
+  }
+
+  .dark {
+    --bg-background: 2 6 23;
+    /* Slate 950 base */
+    --text-primary: 241 245 249;
+    --text-secondary: 148 163 184;
+    --border-subtle: 30 41 59;
+  }
+
+  html {
+    font-family: 'Outfit', 'Inter', system-ui, sans-serif;
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-50 antialiased min-h-screen selection:bg-indigo-500/30 selection:text-indigo-400 transition-colors duration-300;
+    overflow-x: hidden;
+  }
+
+  /* Custom Scrollbar - Sleek & Minimal */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 dark:bg-slate-700/50 rounded-full hover:bg-slate-400 dark:hover:bg-slate-600 transition-colors;
+  }
+}
+
+@layer utilities {
+  .container-width {
+    @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Performance Optimized Glassmorphism */
+  /* Use simple opacity for low-end devices if needed, but here we optimize the blur radius */
+  .glass {
+    @apply bg-white/90 dark:bg-[#0f172a]/90 backdrop-blur-[2px] border border-slate-200/50 dark:border-white/5 shadow-sm;
+  }
+
+  .glass-card {
+    @apply bg-white dark:bg-[#0f172a] border border-slate-100 dark:border-slate-800 shadow-lg shadow-slate-200/50 dark:shadow-black/20 transition-all duration-200;
+  }
+
+  .glass-panel {
+    @apply bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-md border border-white/20 dark:border-white/5 shadow-xl;
+  }
+
+  /* Premium Glass - Use checking for hardware support implicitly by browser */
+  .glass-premium {
+    @apply bg-white/10 dark:bg-black/20 backdrop-blur-lg border border-white/20 dark:border-white/10 shadow-2xl;
+  }
+
+  .glass-button {
+    @apply bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-[#334155] transition-all active:scale-95 shadow-sm;
+  }
+
+  .text-gradient-primary {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-sky-400 via-indigo-400 to-violet-400;
+  }
+
+  .text-glow {
+    text-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+  }
+
+  /* GPU Accelerated Classes */
+  .gpu {
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+}
+
+/* Optimized Animations - Using Transform over Top/Left */
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(0, -10px, 0);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+  will-change: transform;
+  /* Hint to browser */
+}
+
+@keyframes sparkle {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(0.8);
+    opacity: 0.7;
+  }
+}
+
+.animate-sparkle {
+  animation: sparkle 3s ease-in-out infinite;
+}
