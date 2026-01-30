@@ -37,10 +37,21 @@ app.use(express.json({ limit: '50mb' }));
 const YTDLP_PATH = path.join(__dirname, 'node_modules', 'youtube-dl-exec', 'bin', process.platform === 'win32' ? 'yt-dlp.exe' : 'yt-dlp');
 
 console.log(`YTDLP_PATH resolved to: ${YTDLP_PATH}`);
+
 if (!fs.existsSync(YTDLP_PATH)) {
   console.error("CRITICAL: yt-dlp binary NOT FOUND at path:", YTDLP_PATH);
-  // Fallback: Try to find it blindly in node_modules if path changed
-  // This is a safety measure
+  // Attempt to look in parent directory if hoisted
+  // ...
+} else {
+  // Ensure executable permissions on Linux/Mac
+  if (process.platform !== 'win32') {
+    try {
+      fs.chmodSync(YTDLP_PATH, '755');
+      console.log("Successfully set permissions (755) for yt-dlp");
+    } catch (e) {
+      console.error("Failed to set permissions for yt-dlp:", e.message);
+    }
+  }
 }
 
 // Helper to log to file
@@ -95,7 +106,9 @@ const runYtDlp = (args, options = {}) => {
 
       process.on('close', (code) => {
         if (code !== 0) {
-          reject(new Error(stderr || `Process exited with code ${code}`));
+          const errorMessage = stderr || `Process exited with code ${code}`;
+          console.error(`YtDlp Failed: ${errorMessage}`);
+          reject(new Error(errorMessage));
         } else {
           resolve(stdout);
         }
