@@ -88,6 +88,35 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'Video Downloader API is running' });
 });
 
+// DEBUG ROUTE: Remove this after fixing
+app.get('/api/debug', (req, res) => {
+  try {
+    const debugInfo = {
+      platform: process.platform,
+      cwd: process.cwd(),
+      __dirname: __dirname,
+      binaryPath: YTDLP_PATH,
+      binaryExists: fs.existsSync(YTDLP_PATH),
+      lsNodeModules: fs.existsSync(path.join(__dirname, 'node_modules')) ? 'Exists' : 'Missing',
+      lsYtExec: fs.existsSync(path.join(__dirname, 'node_modules', 'youtube-dl-exec')) ? 'Exists' : 'Missing',
+      lsBin: fs.existsSync(path.join(__dirname, 'node_modules', 'youtube-dl-exec', 'bin')) ? 'Exists' : 'Missing',
+    };
+
+    if (debugInfo.binaryExists) {
+      try {
+        debugInfo.permissions = fs.statSync(YTDLP_PATH).mode;
+      } catch (e) {
+        debugInfo.permissionsError = e.message;
+      }
+    }
+
+    res.json(debugInfo);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+
 // Helper to run yt-dlp
 const runYtDlp = (args, options = {}) => {
   return new Promise((resolve, reject) => {
