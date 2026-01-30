@@ -174,18 +174,47 @@ app.get('/api/proxy', (req, res) => {
   });
 });
 
+// Helper to get cookies path if exists
+const getCookiesArgs = () => {
+  const cookiePath = path.join(__dirname, 'cookies.txt');
+  // Check if ENV var is set and update file
+  if (process.env.YOUTUBE_COOKIES) {
+    try {
+      // Allow passing base64 to avoid formatting issues in ENV vars
+      const content = process.env.YOUTUBE_COOKIES.startsWith('base64:')
+        ? Buffer.from(process.env.YOUTUBE_COOKIES.substring(7), 'base64').toString('utf8')
+        : process.env.YOUTUBE_COOKIES;
+
+      fs.writeFileSync(cookiePath, content);
+      return ['--cookies', cookiePath];
+    } catch (e) {
+      console.error("Failed to write cookies file:", e);
+    }
+  } else if (fs.existsSync(cookiePath)) {
+    return ['--cookies', cookiePath];
+  }
+  return [];
+};
+
 // Helper to try fetching info with different browsers
-const fetchInfoWithRetry = async (url, browsers = [null, 'chrome', 'edge', 'firefox']) => {
+const fetchInfoWithRetry = async (url, browsers = null) => {
+  // On Windows, try installed browsers. On Server (Linux), usually only manual cookies work.
+  // We default to [null] (standard request) + cookies if available.
+  if (!browsers) {
+    browsers = [null];
+    if (process.platform === 'win32') {
+      browsers.push('chrome', 'edge', 'firefox');
+    }
+  }
+
   let lastError = null;
 
   for (const browser of browsers) {
     try {
-      console.log(`Attempting fetch with browser: ${browser}`);
+      console.log(`Attempting fetch${browser ? ` with browser: ${browser}` : ''}`);
       const isYoutube = url.includes('youtube.com') || url.includes('youtu.be');
       const hasList = url.includes('list=');
       const hasVideo = url.includes('v=') || url.includes('youtu.be/');
-      // detailed check: if it has both v and list, user likely wants the video
-      // If user pasted a direct playlist link (no v=), they want playlist.
       const preferVideo = hasVideo && hasList;
 
       const args = [
@@ -198,21 +227,18 @@ const fetchInfoWithRetry = async (url, browsers = [null, 'chrome', 'edge', 'fire
         '--add-header', 'User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
       ];
 
-      if (browser) {
+      // Add cookies if available (for the 'null' browser case)
+      if (!browser) {
+        args.push(...getCookiesArgs());
+      } else {
         args.push('--cookies-from-browser', browser);
       }
-
-      // if (isYoutube) {
-      //   args.push('--youtube-skip-dash-manifest');
-      // }
 
       const outputStr = await runYtDlp(args);
       return { output: JSON.parse(outputStr), browser };
     } catch (error) {
-      console.log(`Failed with ${browser}: ${error.message}`);
+      console.log(`Failed${browser ? ` with ${browser}` : ''}: ${error.message.split('\n')[0]}`); // Log only first line of error
       lastError = error;
-      // If error is NOT related to cookies/auth, maybe don't retry? 
-      // But safe to retry anyway.
     }
   }
   throw lastError;
