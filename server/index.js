@@ -224,6 +224,8 @@ const fetchInfoWithRetry = async (url, browsers = null) => {
         '--prefer-free-formats',
         preferVideo ? '--no-playlist' : '--flat-playlist',
         '--js-runtimes', `node:${process.execPath}`,
+        // ATTEMPT BYPASS: Use Android/iOS clients instead of Web to avoid "Sign in" trigger
+        '--extractor-args', 'youtube:player_client=android,ios',
         '--add-header', 'User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
       ];
 
@@ -419,6 +421,8 @@ app.post('/api/process-video', async (req, res) => {
         url, '-o', filePath, '-f', formatSelector,
         '--merge-output-format', 'mp4', '--ffmpeg-location', __dirname, '--no-playlist',
         // '--cookies-from-browser', auth_browser,
+        // BYPASS: Use Android client
+        '--extractor-args', 'youtube:player_client=android,ios',
         '-S', 'vcodec:h264,res,acodec:m4a',
         '--retries', '10', '--fragment-retries', '10',
         '--buffer-size', '16M', '--http-chunk-size', '10M', '-N', '16',
