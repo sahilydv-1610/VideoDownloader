@@ -88,6 +88,23 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'Video Downloader API is running' });
 });
 
+// LOGS ROUTE: To see what's happening
+app.get('/api/logs', (req, res) => {
+  const logPath = path.join(__dirname, 'server.log');
+  if (fs.existsSync(logPath)) {
+    // Read last 100 lines
+    fs.readFile(logPath, 'utf8', (err, data) => {
+      if (err) return res.status(500).send(err.message);
+      const lines = data.split('\n').slice(-100).join('\n');
+      res.set('Content-Type', 'text/plain');
+      res.send(lines);
+    });
+  } else {
+    res.send('No logs found');
+  }
+});
+
+
 // DEBUG ROUTE: Remove this after fixing
 app.get('/api/debug', (req, res) => {
   try {
