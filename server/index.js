@@ -196,22 +196,19 @@ const getCookiesArgs = () => {
   return [];
 };
 
-// Helper to try fetching info with different browsers
-const fetchInfoWithRetry = async (url, browsers = null) => {
-  // On Windows, try installed browsers. On Server (Linux), usually only manual cookies work.
-  // We default to [null] (standard request) + cookies if available.
-  if (!browsers) {
-    browsers = [null];
-    if (process.platform === 'win32') {
-      browsers.push('chrome', 'edge', 'firefox');
-    }
-  }
+// Helper to try fetching info with different strategies
+const fetchInfoWithRetry = async (url) => {
+  const strategies = [
+    { name: 'Android', args: ['--extractor-args', 'youtube:player_client=android'] },
+    { name: 'iOS', args: ['--extractor-args', 'youtube:player_client=ios'] },
+    { name: 'Web', args: [] } // Fallback to default (Web)
+  ];
 
   let lastError = null;
 
-  for (const browser of browsers) {
+  for (const strategy of strategies) {
     try {
-      console.log(`Attempting fetch${browser ? ` with browser: ${browser}` : ''}`);
+      console.log(`Attempting fetch with strategy: ${strategy.name}`);
       const isYoutube = url.includes('youtube.com') || url.includes('youtu.be');
       const hasList = url.includes('list=');
       const hasVideo = url.includes('v=') || url.includes('youtu.be/');
@@ -224,22 +221,19 @@ const fetchInfoWithRetry = async (url, browsers = null) => {
         '--prefer-free-formats',
         preferVideo ? '--no-playlist' : '--flat-playlist',
         '--js-runtimes', `node:${process.execPath}`,
-        // ATTEMPT BYPASS: Use Android/iOS clients instead of Web to avoid "Sign in" trigger
-        '--extractor-args', 'youtube:player_client=android,ios',
-        '--add-header', 'User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        ...strategy.args
       ];
 
-      // Add cookies if available (for the 'null' browser case)
-      if (!browser) {
-        args.push(...getCookiesArgs());
-      } else {
-        args.push('--cookies-from-browser', browser);
+      // Add User-Agent ONLY for Web strategy to avoid conflicts with API clients
+      if (strategy.name === 'Web') {
+        args.push('--add-header', 'User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+        args.push(...getCookiesArgs()); // Only use cookies for Web
       }
 
       const outputStr = await runYtDlp(args);
-      return { output: JSON.parse(outputStr), browser };
+      return { output: JSON.parse(outputStr), browser: strategy.name };
     } catch (error) {
-      console.log(`Failed${browser ? ` with ${browser}` : ''}: ${error.message.split('\n')[0]}`); // Log only first line of error
+      console.log(`Failed with ${strategy.name}: ${error.message.split('\n')[0]}`);
       lastError = error;
     }
   }
@@ -384,31 +378,49 @@ app.post('/api/process-video', async (req, res) => {
     filePath,
     filename,
     isAudio,
+    filename,
+    isAudio,
     watermark, // Store watermark preference
     createdAt: Date.now(),
-    subprocess: null
+    subprocess: null,
+    strategy: auth_browser // Reuse this field to store the successful strategy name
   });
 
   res.json({ jobId, status: 'started' });
 
   // Start Processing Async
-  logToFile(`Starting Job ${jobId}: URL=${url} Watermark=${watermark}`);
+  const strategy = jobs.get(jobId).strategy || 'Web';
+  logToFile(`Starting Job ${jobId}: URL=${url} Strategy=${strategy}`);
   io.emit('job-update', { jobId, status: 'getting info', progress: 0 });
 
   try {
     let args = [];
+    const commonArgs = [
+      '--retries', '10', '--fragment-retries', '10',
+      '--buffer-size', '16M', '--http-chunk-size', '10M', '-N', '16',
+      '--js-runtimes', `node:${process.execPath}`,
+    ];
+
+    // Strategy specific args
+    if (strategy === 'Android') {
+      commonArgs.push('--extractor-args', 'youtube:player_client=android');
+    } else if (strategy === 'iOS') {
+      commonArgs.push('--extractor-args', 'youtube:player_client=ios');
+    } else {
+      // Web Strategy
+      commonArgs.push('--add-header', 'User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+      const cookiePath = path.join(__dirname, 'cookies.txt');
+      if (fs.existsSync(cookiePath)) commonArgs.push('--cookies', cookiePath);
+    }
+
     if (isAudio) {
-      // Audio Quality Logic
-      const bitrate = req.body.audioBitrate || '192'; // Default to 192k
+      const bitrate = req.body.audioBitrate || '192';
       args = [
         url, '-o', filePath, '-f', 'bestaudio/best',
         '--extract-audio', '--audio-format', 'mp3',
-        '--postprocessor-args', `ffmpeg:-b:a ${bitrate}k`, // Force bitrate
+        '--postprocessor-args', `ffmpeg:-b:a ${bitrate}k`,
         '--ffmpeg-location', __dirname, '--no-playlist',
-        '--retries', '10', '--fragment-retries', '10',
-        '--buffer-size', '16M', '--http-chunk-size', '10M', '-N', '16',
-        '--js-runtimes', `node:${process.execPath}`,
-        '--add-header', 'User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        ...commonArgs
       ];
     } else {
       let formatSelector = 'bestvideo+bestaudio/best';
@@ -416,29 +428,13 @@ app.post('/api/process-video', async (req, res) => {
         const height = quality.replace('p', '');
         formatSelector = `bestvideo[height<=${height}]+bestaudio/best[height<=${height}]`;
       }
-      const isYoutube = url.includes('youtube.com') || url.includes('youtu.be');
+
       args = [
         url, '-o', filePath, '-f', formatSelector,
         '--merge-output-format', 'mp4', '--ffmpeg-location', __dirname, '--no-playlist',
-        // '--cookies-from-browser', auth_browser,
-        // BYPASS: Use Android client
-        '--extractor-args', 'youtube:player_client=android,ios',
         '-S', 'vcodec:h264,res,acodec:m4a',
-        '--retries', '10', '--fragment-retries', '10',
-        '--buffer-size', '16M', '--http-chunk-size', '10M', '-N', '16',
-        '--js-runtimes', `node:${process.execPath}`,
-        '--add-header', 'User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        ...commonArgs
       ];
-      if (auth_browser) {
-        args.push('--cookies-from-browser', auth_browser);
-      }
-      if (!isYoutube) {
-        // Use bestvideo+bestaudio/best to avoid "best" warning and get better quality
-        args = [url, '-o', filePath, '-f', 'bestvideo+bestaudio/best', '--ffmpeg-location', __dirname, '--no-playlist'];
-        if (auth_browser) {
-          args.push('--cookies-from-browser', auth_browser);
-        }
-      }
     }
 
     const ffmpegDir = path.dirname(ffmpegPath);
