@@ -1,133 +1,130 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* Premium Dark Palette */
-    --bg-background: 248 250 252;
-    --text-primary: 15 23 42;
-    --text-secondary: 71 85 105;
-    --border-subtle: 226 232 240;
+    /* LIQUID AURORA PALETTE */
+    /* Deep Backgrounds */
+    --bg-main: 3 7 18;
+    /* Very dark slate/cyan base like #030712 */
+    --bg-surface: 8 15 25;
+    /* Slightly lighter surface */
+    --bg-glass: 10 20 35;
+    /* Glass base */
 
-    /* New Gradients - Rich & Deep */
-    --gradient-primary: linear-gradient(135deg, #0ea5e9 0%, #6366f1 50%, #8b5cf6 100%);
-    --gradient-dark: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-    --gradient-glow: radial-gradient(circle at center, rgba(56, 189, 248, 0.15) 0%, transparent 70%);
-  }
-
-  .dark {
-    --bg-background: 2 6 23;
-    /* Slate 950 base */
-    --text-primary: 241 245 249;
+    /* Typography */
+    --text-primary: 248 250 252;
     --text-secondary: 148 163 184;
-    --border-subtle: 30 41 59;
-  }
+    --text-muted: 100 116 139;
 
-  html {
-    font-family: 'Outfit', 'Inter', system-ui, sans-serif;
-    scroll-behavior: smooth;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    /* Accents (Cyan/Emerald/Teal) */
+    --primary: 6 182 212;
+    /* Cyan 500 (#06b6d4) */
+    --primary-glow: 16 185 129;
+    /* Emerald 500 (#10b981) */
+    --accent-blue: 14 165 233;
+    /* Light Blue 500 */
+    --accent-teal: 20 184 166;
+    /* Teal 500 */
+
+    /* Functional */
+    --success: 16 185 129;
+    --error: 244 63 94;
+    --warning: 245 158 11;
+
+    /* Borders */
+    --border-glass: 255 255 255 0.05;
+    --border-glass-hover: 255 255 255 0.15;
+
+    /* Fonts */
+    --font-heading: 'Outfit', sans-serif;
+    --font-body: 'Inter', sans-serif;
   }
 
   body {
-    @apply bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-50 antialiased min-h-screen selection:bg-indigo-500/30 selection:text-indigo-400 transition-colors duration-300;
-    overflow-x: hidden;
+    @apply bg-[rgb(var(--bg-main))] text-[rgb(var(--text-primary))] antialiased selection:bg-[rgb(var(--primary))]/30 overflow-x-hidden;
+    font-family: var(--font-body);
   }
 
-  /* Custom Scrollbar - Sleek & Minimal */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    @apply bg-slate-300 dark:bg-slate-700/50 rounded-full hover:bg-slate-400 dark:hover:bg-slate-600 transition-colors;
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply tracking-tight;
+    font-family: var(--font-heading);
   }
 }
 
 @layer utilities {
-  .container-width {
-    @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
-  }
 
-  /* Performance Optimized Glassmorphism */
-  /* Use simple opacity for low-end devices if needed, but here we optimize the blur radius */
+  /* GLASSMORPHISM */
   .glass {
-    @apply bg-white/90 dark:bg-[#0f172a]/90 backdrop-blur-[2px] border border-slate-200/50 dark:border-white/5 shadow-sm;
+    @apply bg-[rgb(var(--bg-glass))]/30 backdrop-blur-3xl border border-white/[0.05] shadow-2xl;
   }
 
   .glass-card {
-    @apply bg-white dark:bg-[#0f172a] border border-slate-100 dark:border-slate-800 shadow-lg shadow-slate-200/50 dark:shadow-black/20 transition-all duration-200;
+    @apply bg-white/[0.02] backdrop-blur-3xl border border-white/[0.06] shadow-2xl transition-all duration-300 rounded-3xl;
   }
 
-  .glass-panel {
-    @apply bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-md border border-white/20 dark:border-white/5 shadow-xl;
+  .glass-card-hover {
+    @apply hover:bg-white/[0.05] hover:border-white/[0.15] hover:scale-[1.02] hover:shadow-[0_0_30px_-5px_rgba(6,182,212,0.15)];
   }
 
-  /* Premium Glass - Use checking for hardware support implicitly by browser */
-  .glass-premium {
-    @apply bg-white/10 dark:bg-black/20 backdrop-blur-lg border border-white/20 dark:border-white/10 shadow-2xl;
+  .glass-input {
+    @apply bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl px-6 py-4 outline-none focus:border-[rgb(var(--primary))]/60 focus:bg-black/60 focus:ring-4 focus:ring-[rgb(var(--primary))]/10 transition-all duration-300 placeholder:text-white/20;
   }
 
   .glass-button {
-    @apply bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-[#334155] transition-all active:scale-95 shadow-sm;
+    @apply relative overflow-hidden bg-gradient-to-r from-[rgb(var(--primary))] to-[rgb(var(--primary-glow))] text-white font-bold px-8 py-4 rounded-xl border border-white/20 transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_30px_-5px_rgba(16,185,129,0.5)] active:scale-95;
+  }
+
+  /* TEXT GRADIENTS */
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-br from-white via-[#f8fafc] to-[#94a3b8];
   }
 
   .text-gradient-primary {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-sky-400 via-indigo-400 to-violet-400;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-[rgb(var(--primary))] via-[rgb(var(--primary-glow))] to-[rgb(var(--accent-teal))];
   }
 
-  .text-glow {
-    text-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+  /* ANIMATIONS */
+  .animate-float {
+    animation: float 8s ease-in-out infinite;
+  }
+  
+  .animate-float-delayed {
+    animation: float 8s ease-in-out 4s infinite;
   }
 
-  /* GPU Accelerated Classes */
-  .gpu {
-    transform: translate3d(0, 0, 0);
-    backface-visibility: hidden;
-    perspective: 1000px;
+  .animate-pulse-slow {
+    animation: pulse 6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 }
 
-/* Optimized Animations - Using Transform over Top/Left */
 @keyframes float {
-
   0%,
   100% {
-    transform: translate3d(0, 0, 0);
+    transform: translateY(0) scale(1);
   }
-
   50% {
-    transform: translate3d(0, -10px, 0);
+    transform: translateY(-20px) scale(1.05);
   }
 }
 
-.animate-float {
-  animation: float 6s ease-in-out infinite;
-  will-change: transform;
-  /* Hint to browser */
+/* SCROLLBAR */
+::-webkit-scrollbar {
+  width: 6px;
 }
 
-@keyframes sparkle {
-
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-
-  50% {
-    transform: scale(0.8);
-    opacity: 0.7;
-  }
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-.animate-sparkle {
-  animation: sparkle 3s ease-in-out infinite;
+::-webkit-scrollbar-thumb {
+  @apply bg-white/10 rounded-full hover:bg-white/20 transition-colors;
 }

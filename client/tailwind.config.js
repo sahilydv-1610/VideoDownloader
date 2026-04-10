@@ -9,6 +9,8 @@ export default {
         extend: {
             fontFamily: {
                 sans: ['Outfit', 'Inter', 'system-ui', 'sans-serif'],
+                heading: ['Outfit', 'sans-serif'],
+                body: ['Inter', 'sans-serif'],
             },
             colors: {
                 // New Cosmic Palette

@@ -22,7 +22,7 @@ export function useClipboard(timeout = 2000) {
                 const textArea = document.createElement("textarea");
                 textArea.value = text;
 
-                // Ensure element is unobtrusive but technically "visible" for simple browsers
+                // Ensure element is unobtrusive but technically "visible"
                 textArea.style.position = 'fixed';
                 textArea.style.top = '0';
                 textArea.style.left = '0';
@@ -45,8 +45,8 @@ export function useClipboard(timeout = 2000) {
 
                 document.body.appendChild(textArea);
 
-                // Check for iOS/Apple devices to handle selection differently
-                if (navigator.userAgent.match(/ipart/i) || navigator.userAgent.match(/iphone/i)) {
+                // Check for iOS/Apple devices (Fixed 'ipart' typo)
+                if (navigator.userAgent.match(/ipad|ipod|iphone/i)) {
                     const range = document.createRange();
                     range.selectNodeContents(textArea);
                     const selection = window.getSelection();

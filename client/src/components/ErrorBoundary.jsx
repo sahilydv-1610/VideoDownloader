@@ -1,5 +1,6 @@
 import React from 'react';
-import { AlertCircle, RefreshCcw, Home } from 'lucide-react';
+import { AlertTriangle, RefreshCcw, Home } from 'lucide-react';
+import clsx from 'clsx';
 
 export class ErrorBoundary extends React.Component {
     constructor(props) {
@@ -18,40 +19,46 @@ export class ErrorBoundary extends React.Component {
     render() {
         if (this.state.hasError) {
             return (
-                <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#020617] p-6 text-center selection:bg-rose-500/30">
-                    {/* Background blob for atmosphere */}
-                    <div className="fixed inset-0 pointer-events-none overflow-hidden">
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-rose-500/10 rounded-full blur-[100px] mix-blend-multiply dark:mix-blend-normal" />
-                    </div>
+                <div className="min-h-screen flex items-center justify-center bg-[rgb(var(--bg-deep))] p-6 text-center font-sans overflow-hidden relative">
 
-                    <div className="relative max-w-md w-full glass-card p-10 rounded-[2rem] border border-white/60 dark:border-white/5 shadow-2xl shadow-rose-900/5 backdrop-blur-xl">
-                        <div className="w-20 h-20 rounded-2xl bg-rose-50 dark:bg-rose-900/10 flex items-center justify-center mx-auto mb-8 border border-rose-100 dark:border-rose-500/20 shadow-inner">
-                            <AlertCircle className="w-10 h-10 text-rose-500" />
+                    {/* Background Noise/Grid */}
+                    <div className="absolute inset-0 opacity-10 bg-[url('/noise.png')] pointer-events-none" />
+                    <div className="absolute inset-0 opacity-5 bg-gradient-to-b from-transparent to-red-500/10 pointer-events-none" />
+
+                    <div className="relative max-w-md w-full bg-[rgb(var(--bg-card))] p-8 md:p-12 rounded-[2.5rem] border border-white/10 shadow-2xl flex flex-col items-center">
+
+                        <div className="w-20 h-20 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-8 relative group">
+                            <div className="absolute inset-0 bg-red-500/20 blur-xl rounded-full animate-pulse" />
+                            <AlertTriangle className="w-8 h-8 text-red-500 relative z-10" />
                         </div>
 
-                        <h1 className="text-3xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">Something went wrong</h1>
-                        <p className="text-base text-slate-500 dark:text-slate-400 mb-8 leading-relaxed font-medium">
-                            An unexpected error occurred. We've logged this issue and are looking into it.
+                        <h1 className="text-3xl font-black text-white mb-3 tracking-tight">System Halted</h1>
+                        <p className="text-sm text-[rgb(var(--text-secondary))] mb-8 leading-relaxed max-w-xs mx-auto">
+                            A critical runtime anomaly was detected. The system has paused to prevent damage.
                         </p>
 
-                        <div className="bg-slate-100 dark:bg-black/30 rounded-xl p-4 mb-8 text-left overflow-auto max-h-32 custom-scrollbar border border-slate-200 dark:border-white/5 shadow-inner">
-                            <p className="text-[10px] font-mono text-rose-500 break-all leading-relaxed">
-                                {this.state.error?.toString() || "Unknown Error"}
+                        <div className="w-full bg-black/40 rounded-xl p-4 mb-8 text-left border border-white/5 overflow-hidden">
+                            <div className="flex items-center gap-2 mb-2 border-b border-white/5 pb-2">
+                                <div className="w-2 h-2 rounded-full bg-red-500/50" />
+                                <span className="text-[10px] font-mono text-[rgb(var(--text-tertiary))] uppercase">Error Log</span>
+                            </div>
+                            <p className="text-[10px] font-mono text-red-400 break-all leading-relaxed opacity-80 line-clamp-4">
+                                {this.state.error?.toString() || "Unknown Critical Failure"}
                             </p>
                         </div>
 
-                        <div className="flex flex-col gap-3">
+                        <div className="grid grid-cols-2 gap-3 w-full">
                             <button
                                 onClick={() => window.location.reload()}
-                                className="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg hover:shadow-xl"
+                                className="col-span-1 px-4 py-3 bg-white text-black rounded-xl font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-white/90 transition-colors"
                             >
-                                <RefreshCcw className="w-4 h-4" /> Reload Page
+                                <RefreshCcw className="w-3.5 h-3.5" /> Reboot
                             </button>
                             <a
                                 href="/"
-                                className="w-full py-4 bg-white/50 dark:bg-white/5 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/10 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-white dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white transition-all shadow-sm hover:shadow-md"
+                                className="col-span-1 px-4 py-3 bg-white/5 border border-white/10 text-white rounded-xl font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-white/10 transition-colors"
                             >
-                                <Home className="w-4 h-4" /> Back to Home
+                                <Home className="w-3.5 h-3.5" /> Home
                             </a>
                         </div>
                     </div>

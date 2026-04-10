@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { io } from 'socket.io-client';
+import { useSettings } from './SettingsContext';
 
 const DownloadContext = createContext();
 
@@ -9,6 +10,12 @@ export function DownloadProvider({ children }) {
     const [socket, setSocket] = useState(null);
     const [jobs, setJobs] = useState({}); // Map of jobId -> jobData
     const [activeDownloads, setActiveDownloads] = useState([]);
+    const { settings } = useSettings();
+    const settingsRef = useRef(settings); // Track latest settings
+
+    useEffect(() => {
+        settingsRef.current = settings;
+    }, [settings]);
 
     useEffect(() => {
         // Request Notification Permission on mount
@@ -44,10 +51,10 @@ export function DownloadProvider({ children }) {
                 downloadFile(jobId, filename);
 
                 // Desktop Notification
-                if ('Notification' in window && Notification.permission === 'granted') {
+                if (settingsRef.current.notifications && 'Notification' in window && Notification.permission === 'granted') {
                     new Notification('Download Complete', {
                         body: `${filename} has finished processing.`,
-                        icon: '/vite.svg' // Fallback icon
+                        icon: '/vite.svg'
                     });
                 }
 
@@ -146,9 +153,46 @@ export function DownloadProvider({ children }) {
         });
     };
 
+    const startStreamDownload = useCallback(async (url, quality, info, options = {}) => {
+        try {
+            // 1. Prepare ticket
+            const res = await fetch(`${API_Base}/api/prepare-stream`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    url,
+                    quality,
+                    auth_browser: info.auth_browser,
+                    ...options
+                })
+            });
+            const data = await res.json();
+
+            if (data.ticketId) {
+                // 2. Trigger Download via invisible iframe to prevent navigation on error
+                // Using iframe allows "background" feel - user stays on page
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = `${API_Base}/api/stream-download/${data.ticketId}`;
+                document.body.appendChild(iframe);
+
+                // Cleanup after a delay (long enough for download to start)
+                setTimeout(() => {
+                    document.body.removeChild(iframe);
+                }, 60000);
+
+                return true;
+            }
+        } catch (err) {
+            console.error("Failed to start stream download:", err);
+            throw err;
+        }
+    }, []);
+
     const value = {
         jobs,
         startDownload,
+        startStreamDownload,
         cancelDownload,
         dismissJob,
         activeCount: Object.values(jobs).filter(j => j.status === 'downloading' || j.status === 'starting' || j.status === 'merging').length
